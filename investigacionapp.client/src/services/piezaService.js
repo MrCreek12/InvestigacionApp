@@ -1,6 +1,6 @@
 // InvestigacionApp.client/src/services/piezaService.js
 
-const API_URL = "api/piezas";
+const API_URL = "https://localhost:7276/api/Piezas";
 
 export const getPiezas = async () => {
     const response = await fetch(API_URL);

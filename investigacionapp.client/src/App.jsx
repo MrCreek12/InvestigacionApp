@@ -9,6 +9,11 @@ function App() {
     const [nombre, setNombre] = useState('');
     const [estado, setEstado] = useState(0); // 0: Nuevo, 1: Usado, 2: Reciclado
 
+    // Nuevos estados para campos adicionales del modelo Pieza.cs
+    const [cantidad, setCantidad] = useState(''); // String para "10kg", "5 unidades", etc.
+    const [ubicacion, setUbicacion] = useState('');
+    const [posiblesUsos, setPosiblesUsos] = useState(''); // Opcional, por eso string? en el modelo
+
     // useEffect se ejecuta cuando el componente se carga
     useEffect(() => {
         cargarPiezas();
@@ -21,17 +26,41 @@ function App() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const nuevaPieza = { nombre, estado, cantidad: "1", ubicacion: "Taller" };
-        await piezaService.createPieza(nuevaPieza);
+        // Construimos el objeto nuevaPieza con todos los campos del modelo
+        const nuevaPieza = {
+            nombre,
+            estado,
+            cantidad,
+            ubicacion,
+            // Si posiblesUsos está vacío, lo enviamos como null (o un string vacío, el backend lo maneja)
+            // Esto es importante para el '?' en 'string?' del modelo C#.
+            posiblesUsos: posiblesUsos || null
+        };
 
-        // Limpiar formulario y recargar lista
-        setNombre('');
-        cargarPiezas();
+        try {
+            await piezaService.createPieza(nuevaPieza);
+            // Limpiar formulario y recargar lista
+            setNombre('');
+            setEstado(0); // Restablecer a "Nuevo"
+            setCantidad('');
+            setUbicacion('');
+            setPosiblesUsos('');
+            cargarPiezas();
+        } catch (error) {
+            console.error("Error al guardar la pieza:", error);
+            // Aquí podrías mostrar un mensaje al usuario
+            alert("Hubo un error al guardar la pieza. Revisa la consola para más detalles.");
+        }
     };
 
     const handleBorrar = async (id) => {
-        await piezaService.deletePieza(id);
-        cargarPiezas();
+        try {
+            await piezaService.deletePieza(id);
+            cargarPiezas();
+        } catch (error) {
+            console.error("Error al borrar la pieza:", error);
+            alert("Hubo un error al borrar la pieza. Revisa la consola para más detalles.");
+        }
     };
 
     return (
@@ -47,11 +76,31 @@ function App() {
                     onChange={(e) => setNombre(e.target.value)}
                     required
                 />
-                <select value={estado} onChange={(e) => setEstado(Number(e.target.value))}>
-                    <option value={0}>Nuevo</option>
-                    <option value={1}>Usado</option>
-                    <option value={2}>Reciclado</option>
+                <select value={estado} onChange={(e) => setEstado(e.target.value)}>
+                    <option value={"Nuevo"}>Nuevo</option>
+                    <option value={"Usado"}>Usado</option>
+                    <option value={"Reciclado"}>Reciclado</option>
                 </select>
+                <input
+                    type="text"
+                    placeholder="Cantidad (ej. 10kg, 5 unidades)"
+                    value={cantidad}
+                    onChange={(e) => setCantidad(e.target.value)}
+                    required // Cantidad es requerida en el modelo C# (no es string?)
+                />
+                <input
+                    type="text"
+                    placeholder="Ubicación"
+                    value={ubicacion}
+                    onChange={(e) => setUbicacion(e.target.value)}
+                    required // Ubicación es requerida en el modelo C# (no es string?)
+                />
+                <textarea // Un textarea es mejor para textos más largos
+                    placeholder="Posibles usos (opcional)"
+                    value={posiblesUsos}
+                    onChange={(e) => setPosiblesUsos(e.target.value)}
+                // Este campo no es 'required' porque es 'string?' en el modelo
+                ></textarea>
                 <button type="submit">Guardar</button>
             </form>
 
@@ -63,6 +112,9 @@ function App() {
                     <tr>
                         <th>Nombre</th>
                         <th>Estado</th>
+                        {/* Podemos añadir más columnas si queremos mostrar los nuevos campos */}
+                        <th>Cantidad</th>
+                        <th>Ubicación</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
@@ -70,7 +122,9 @@ function App() {
                     {piezas.map(pieza => (
                         <tr key={pieza.id}>
                             <td>{pieza.nombre}</td>
-                            <td>{['Nuevo', 'Usado', 'Reciclado'][pieza.estado]}</td>
+                            <td>{pieza.estado}</td>
+                            <td>{pieza.cantidad}</td>
+                            <td>{pieza.ubicacion}</td>
                             <td>
                                 <button onClick={() => handleBorrar(pieza.id)}>Borrar</button>
                             </td>

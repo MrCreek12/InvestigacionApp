@@ -4,12 +4,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace InvestigacionApp.Server.Models
 {
-    public enum EstadoPieza
-    {
-        Nuevo,
-        Usado,
-        Reciclado
-    }
+    
 
     public class Pieza
     {
@@ -19,7 +14,7 @@ namespace InvestigacionApp.Server.Models
         [Required] // Campo obligatorio
         public string Nombre { get; set; }
 
-        public EstadoPieza Estado { get; set; }
+        public string Estado { get; set; }
 
         public string Cantidad { get; set; } // Puede ser "10kg", "5 unidades", etc.
 
