@@ -1,49 +1,92 @@
 using InvestigacionApp.Models;
+using InvestigacionApp.Server.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// --------------------------------------------------------
-// 1?? Configuración del servicio de DbContext (conexión SQL)
-// --------------------------------------------------------
+// Configuración de DbContext
 builder.Services.AddDbContext<DbContextPiezas>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("StringLocal")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("StringLocalIvan")));
 
-// --------------------------------------------------------
-// 2?? Agregar servicios del controlador y CORS
-// --------------------------------------------------------
+// Configuración de JWT Service
+builder.Services.AddScoped<JwtService>();
+
+// Configuración de JWT Authentication
+var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+var secretKey = jwtSettings["SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey no configurada");
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtSettings["Issuer"],
+        ValidAudience = jwtSettings["Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
+        ClockSkew = TimeSpan.Zero
+    };
+});
+
+// Configuración de servicios
 builder.Services.AddControllers();
 
-// ?? Configurar CORS para permitir el frontend (React)
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp",
         policy =>
         {
-            // Cambia el puerto si tu frontend usa otro
             policy.WithOrigins("https://localhost:56122")
                   .AllowAnyHeader()
                   .AllowAnyMethod();
         });
 });
 
-// --------------------------------------------------------
-// 3?? Swagger
-// --------------------------------------------------------
+// Configuración de Swagger
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
+        Scheme = "Bearer",
+        BearerFormat = "JWT",
+        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+        Description = "Ingrese 'Bearer' [espacio] y luego su token JWT"
+    });
+
+    c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+    {
+        {
+            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            {
+                Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                {
+                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
 
 var app = builder.Build();
 
-// --------------------------------------------------------
-// 4?? Archivos estáticos y default (para SPA React)
-// --------------------------------------------------------
 app.UseDefaultFiles();
 app.UseStaticFiles();
 
-// --------------------------------------------------------
-// 5?? Configurar pipeline HTTP
-// --------------------------------------------------------
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -51,15 +94,10 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
-// ?? Activar CORS ANTES de los controladores
 app.UseCors("AllowReactApp");
-
+app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
-
-// ?? Permitir SPA fallback (React Router)
 app.MapFallbackToFile("/index.html");
 
 app.Run();

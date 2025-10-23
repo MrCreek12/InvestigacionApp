@@ -1,0 +1,57 @@
+feat: Implementar sistema de autenticación JWT completo
+
+## Características principales
+- Sistema de autenticación con JWT (JSON Web Tokens)
+- Registro e inicio de sesión de usuarios
+- Autorización basada en roles (Admin/User)
+- Protección de endpoints con [Authorize]
+- Frontend con formulario de login
+- Hash seguro de contraseñas con PasswordHasher
+
+## Backend (.NET 8)
+- Nuevo modelo Usuario con Email, Username, Password (hasheado) y Rol
+- AuthController con endpoints register y login
+- JwtService para generación y validación de tokens
+- Configuración de JWT Authentication en Program.cs
+- PiezasController protegido con autorización por roles
+
+## Frontend (React + Vite)
+- Componente Login con formulario de autenticación
+- authService para gestión de tokens y localStorage
+- piezaService actualizado con headers Authorization
+- App.jsx con protección de rutas y permisos por rol
+- Estilos CSS modernos para el login
+
+## Seguridad
+- Contraseñas hasheadas con ASP.NET Identity PasswordHasher
+- Tokens JWT con claims (UserId, Username, Email, Role)
+- Expiración de tokens configurable (24h por defecto)
+- Login acepta username o email indistintamente
+- CORS configurado para el frontend React
+- Swagger con soporte para JWT Bearer authentication
+
+## Configuración
+- Tabla Usuarios en SQL Server
+- JwtSettings en appsettings.json
+- Paquetes NuGet: JwtBearer y System.IdentityModel.Tokens.Jwt
+
+## Documentación
+- README_AUTENTICACION.md con guía completa
+- CHANGELOG.md con resumen detallado de cambios
+- Comentarios limpios en código
+- Script SQL para crear tabla de usuarios
+
+## Permisos por rol
+- Admin: CRUD completo de piezas
+- User: Solo lectura de piezas
+- Todos los endpoints de piezas requieren autenticación
+
+## Testing
+? Compilación exitosa
+? Endpoints funcionando correctamente
+? Login con username y email
+? Autorización por roles operativa
+? Frontend integrado con backend
+
+Breaking Changes: Ninguno
+Migration Required: Ejecutar script SQL para crear tabla Usuarios
