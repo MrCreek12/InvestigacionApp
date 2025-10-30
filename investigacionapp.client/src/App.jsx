@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import * as piezaService from './services/piezaService';
 import { getUser, logout, isAuthenticated, isAdmin } from './services/authService';
 import Login from './components/Login';
+import Register from './components/Register';
 import './App.css';
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
     const [ubicacion, setUbicacion] = useState('');
     const [posiblesUsos, setPosiblesUsos] = useState('');
     const [error, setError] = useState('');
+    const [showRegister, setShowRegister] = useState(false);
 
     // useEffect se ejecuta cuando el componente se carga
     useEffect(() => {
@@ -44,13 +46,29 @@ function App() {
 
     const handleLoginSuccess = (userData) => {
         setUser(userData);
+        setShowRegister(false);
         cargarPiezas();
+    };
+
+    const handleRegisterSuccess = (userData) => {
+        setUser(userData);
+        setShowRegister(false);
+        cargarPiezas();
+    };
+
+    const handleShowRegister = () => {
+        setShowRegister(true);
+    };
+
+    const handleBackToLogin = () => {
+        setShowRegister(false);
     };
 
     const handleLogout = () => {
         logout();
         setUser(null);
         setPiezas([]);
+        setShowRegister(false);
     };
 
     const handleSubmit = async (e) => {
@@ -93,9 +111,22 @@ function App() {
         }
     };
 
-    // Si no está autenticado, mostrar login
+    // Si no está autenticado, mostrar login o register
     if (!user) {
-        return <Login onLoginSuccess={handleLoginSuccess} />;
+        if (showRegister) {
+            return (
+                <Register 
+                    onRegisterSuccess={handleRegisterSuccess}
+                    onBackToLogin={handleBackToLogin}
+                />
+            );
+        }
+        return (
+            <Login 
+                onLoginSuccess={handleLoginSuccess} 
+                onShowRegister={handleShowRegister}
+            />
+        );
     }
 
     return (
@@ -180,7 +211,7 @@ function App() {
                                     <td>
                                         <button 
                                             onClick={() => handleBorrar(pieza.id)}
-                                            className="delete-btn"
+                            className="delete-btn"
                                         >
                                             Borrar
                                         </button>

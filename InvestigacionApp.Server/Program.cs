@@ -9,7 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Configuración de DbContext
 builder.Services.AddDbContext<DbContextPiezas>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("StringLocalIvan")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("StringLocal")));
 
 // Configuración de JWT Service
 builder.Services.AddScoped<JwtService>();

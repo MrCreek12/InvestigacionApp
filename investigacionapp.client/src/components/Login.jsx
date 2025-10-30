@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { login } from '../services/authService';
 import './Login.css';
 
-const Login = ({ onLoginSuccess }) => {
+const Login = ({ onLoginSuccess, onShowRegister }) => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -41,7 +41,7 @@ const Login = ({ onLoginSuccess }) => {
                             placeholder="Ingrese su usuario o email"
                             disabled={loading}
                         />
-                    </div>
+                    </div>  
                     
                     <div className="form-group">
                         <label htmlFor="password">Contraseña</label>
@@ -61,6 +61,18 @@ const Login = ({ onLoginSuccess }) => {
                     <button type="submit" disabled={loading}>
                         {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
                     </button>
+
+                    <div className="auth-switch">
+                        <p>¿No tienes una cuenta?</p>
+                        <button 
+                            type="button" 
+                            className="link-btn" 
+                            onClick={onShowRegister}
+                            disabled={loading}
+                        >
+                            Registrarse
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>

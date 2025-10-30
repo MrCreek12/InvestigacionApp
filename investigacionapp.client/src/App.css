@@ -30,11 +30,27 @@
     gap: 1rem;
 }
 
+.box-btn {
+    padding: 0.5rem 1rem;
+    background: #28a745;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: transform 0.2s, background-color 0.2s;
+}
+
+.box-btn:hover {
+    transform: translateY(-2px);
+    background: #218838;
+}
+
 .logout-btn {
     padding: 0.5rem 1rem;
     background: white;
     color: #667eea;
-    border: none;
+    border: none;                   
     border-radius: 5px;
     cursor: pointer;
     font-weight: 600;
@@ -131,6 +147,29 @@ tr:hover {
     background-color: #f8f9fa;
 }
 
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.add-to-box-btn {
+    padding: 0.5rem 1rem;
+    background: #28a745;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.85rem;
+    transition: background-color 0.2s, transform 0.2s;
+}
+
+.add-to-box-btn:hover {
+    background: #218838;
+    transform: translateY(-1px);
+}
+
 .delete-btn {
     padding: 0.5rem 1rem;
     background: #dc3545;
@@ -139,6 +178,7 @@ tr:hover {
     border-radius: 5px;
     cursor: pointer;
     font-weight: 600;
+    font-size: 0.85rem;
     transition: background 0.2s;
 }
 
@@ -156,4 +196,30 @@ hr {
     border: none;
     border-top: 2px solid #e0e0e0;
     margin: 2rem 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .app-header {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+    
+    .user-info {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .action-buttons {
+        justify-content: center;
+    }
+    
+    table {
+        font-size: 0.9rem;
+    }
+    
+    th, td {
+        padding: 0.75rem 0.5rem;
+    }
 }
