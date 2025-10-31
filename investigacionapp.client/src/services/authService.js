@@ -4,57 +4,55 @@ const API_URL = "https://localhost:7276/api/Auth";
 
 export const login = async (username, password) => {
     try {
-        console.log('Enviando datos de login:', { username, password }); // Debug
-
         const response = await fetch(`${API_URL}/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password })
         });
 
-        // Verificar el tipo de contenido de la respuesta
         const contentType = response.headers.get('content-type');
-        
         if (!response.ok) {
-            // Si la respuesta contiene JSON, intentar parsearlo
             if (contentType && contentType.includes('application/json')) {
                 const error = await response.json();
                 throw new Error(error.message || 'Error al iniciar sesión');
             } else {
-                // Si no es JSON, leer como texto para debugging
                 const errorText = await response.text();
-                console.error('Error del servidor (no JSON):', errorText);
-                throw new Error(`Error del servidor: ${response.status} ${response.statusText}`);
+                throw new Error(`Error del servidor: ${response.status} ${response.statusText} ${errorText}`);
             }
         }
 
-        // Verificar que la respuesta exitosa también sea JSON
         if (!contentType || !contentType.includes('application/json')) {
             const responseText = await response.text();
-            console.error('Respuesta no es JSON:', responseText);
-            throw new Error('El servidor no devolvió una respuesta JSON válida');
+            throw new Error('El servidor no devolvió una respuesta JSON válida: ' + responseText);
         }
 
         const data = await response.json();
-        console.log('Respuesta del servidor:', data); // Debug
-        
-        // Verificar que el token existe (usando minúsculas como viene del servidor)
-        if (!data.token) {
-            throw new Error('No se recibió el token de autenticación');
-        }
-        
-        // Guardar token y datos del usuario en localStorage (usando las propiedades en minúsculas)
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify({
-            username: data.username,
-            email: data.email,
-            rol: data.rol
-        }));
 
-        console.log('Token guardado:', data.token); // Debug
-        console.log('Usuario guardado:', { username: data.username, email: data.email, rol: data.rol }); // Debug
+        // Guardar token y datos del usuario en sessionStorage para que la sesión se cierre al cerrar el navegador
+        if (data.token) {
+            sessionStorage.setItem('token', data.token);
+        }
+
+        if (data.id || data.username || data.email || data.rol) {
+            sessionStorage.setItem('user', JSON.stringify({
+                id: data.id,
+                username: data.username,
+                email: data.email,
+                rol: data.rol
+            }));
+        }
+
+        if (data.expiration) {
+            try {
+                const expDate = new Date(data.expiration);
+                sessionStorage.setItem('token_expiration', expDate.toISOString());
+            } catch (e) {
+                console.warn('No se pudo parsear expiration en login:', data.expiration);
+            }
+        }
 
         return {
+            id: data.id,
             token: data.token,
             username: data.username,
             email: data.email,
@@ -62,8 +60,6 @@ export const login = async (username, password) => {
             expiration: data.expiration
         };
     } catch (error) {
-        console.error('Error en login:', error); // Debug
-        // Si es un error de red o parsing
         if (error.name === 'TypeError' || error.message.includes('Failed to fetch')) {
             throw new Error('No se pudo conectar al servidor. Verifica que el servidor esté corriendo.');
         }
@@ -80,35 +76,53 @@ export const register = async (username, email, password, rol = 'User') => {
         });
 
         const contentType = response.headers.get('content-type');
-        
         if (!response.ok) {
             if (contentType && contentType.includes('application/json')) {
                 const error = await response.json();
                 throw new Error(error.message || 'Error al registrarse');
             } else {
                 const errorText = await response.text();
-                console.error('Error del servidor (no JSON):', errorText);
-                throw new Error(`Error del servidor: ${response.status} ${response.statusText}`);
+                throw new Error(`Error del servidor: ${response.status} ${response.statusText} ${errorText}`);
             }
         }
 
         if (!contentType || !contentType.includes('application/json')) {
             const responseText = await response.text();
-            console.error('Respuesta no es JSON:', responseText);
-            throw new Error('El servidor no devolvió una respuesta JSON válida');
+            throw new Error('El servidor no devolvió una respuesta JSON válida: ' + responseText);
         }
 
         const data = await response.json();
-        
-        // Guardar token y datos del usuario en localStorage (usando las propiedades en minúsculas)
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify({
+
+        if (data.token) {
+            sessionStorage.setItem('token', data.token);
+        }
+
+        if (data.id || data.username || data.email || data.rol) {
+            sessionStorage.setItem('user', JSON.stringify({
+                id: data.id,
+                username: data.username,
+                email: data.email,
+                rol: data.rol
+            }));
+        }
+
+        if (data.expiration) {
+            try {
+                const expDate = new Date(data.expiration);
+                sessionStorage.setItem('token_expiration', expDate.toISOString());
+            } catch (e) {
+                console.warn('No se pudo parsear expiration en register:', data.expiration);
+            }
+        }
+
+        return {
+            id: data.id,
+            token: data.token,
             username: data.username,
             email: data.email,
-            rol: data.rol
-        }));
-
-        return data;
+            rol: data.rol,
+            expiration: data.expiration
+        };
     } catch (error) {
         if (error.name === 'TypeError' || error.message.includes('Failed to fetch')) {
             throw new Error('No se pudo conectar al servidor. Verifica que el servidor esté corriendo.');
@@ -118,35 +132,39 @@ export const register = async (username, email, password, rol = 'User') => {
 };
 
 export const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    console.log('Sesión cerrada, token y usuario eliminados'); // Debug
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('user');
+    sessionStorage.removeItem('token_expiration');
 };
 
 export const getToken = () => {
-    const token = localStorage.getItem('token');
-    console.log('Token obtenido:', token); // Debug
-    return token;
+    return sessionStorage.getItem('token');
 };
 
 export const getUser = () => {
-    const user = localStorage.getItem('user');
-    console.log('Usuario obtenido (string):', user); // Debug
-    const parsedUser = user ? JSON.parse(user) : null;
-    console.log('Usuario parseado:', parsedUser); // Debug
-    return parsedUser;
+    const user = sessionStorage.getItem('user');
+    return user ? JSON.parse(user) : null;
 };
 
 export const isAuthenticated = () => {
     const token = getToken();
-    const isAuth = !!token;
-    console.log('¿Está autenticado?:', isAuth, 'Token:', token); // Debug
-    return isAuth;
+    if (!token) return false;
+
+    const exp = sessionStorage.getItem('token_expiration');
+    if (!exp) return true; // si no hay expiracion, confiar en el token
+
+    try {
+        const expDate = new Date(exp);
+        const now = new Date();
+        const isAuth = now < expDate;
+        if (!isAuth) logout();
+        return isAuth;
+    } catch (e) {
+        return !!token;
+    }
 };
 
 export const isAdmin = () => {
     const user = getUser();
-    const adminStatus = user && user.rol === 'Admin';
-    console.log('¿Es Admin?:', adminStatus, 'Usuario:', user); // Debug
-    return adminStatus;
+    return user && user.rol === 'Admin';
 };

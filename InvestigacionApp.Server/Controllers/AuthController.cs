@@ -61,6 +61,7 @@ namespace InvestigacionApp.Server.Controllers
 
                 return Ok(new AuthResponseDto
                 {
+                    Id = usuario.Id,
                     Token = token,
                     Username = usuario.Username,
                     Email = usuario.Email,
@@ -131,6 +132,7 @@ namespace InvestigacionApp.Server.Controllers
 
                 return Ok(new AuthResponseDto
                 {
+                    Id = usuario.Id,
                     Token = token,
                     Username = usuario.Username,
                     Email = usuario.Email,

@@ -24,19 +24,25 @@ namespace InvestigacionApp.Server.Services
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-            var claims = new[]
+            var now = DateTime.UtcNow;
+            var expires = now.AddHours(Convert.ToDouble(jwtSettings["ExpirationHours"]));
+
+            var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, usuario.Id.ToString()),
                 new Claim(ClaimTypes.Name, usuario.Username),
                 new Claim(ClaimTypes.Email, usuario.Email),
-                new Claim(ClaimTypes.Role, usuario.Rol)
+                new Claim(ClaimTypes.Role, usuario.Rol),
+                // Agregar IAT (issued at) como claim numérico (segundos Unix)
+                new Claim(JwtRegisteredClaimNames.Iat, new DateTimeOffset(now).ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64)
             };
 
             var token = new JwtSecurityToken(
                 issuer: jwtSettings["Issuer"],
                 audience: jwtSettings["Audience"],
                 claims: claims,
-                expires: DateTime.Now.AddHours(Convert.ToDouble(jwtSettings["ExpirationHours"])),
+                notBefore: now,
+                expires: expires,
                 signingCredentials: credentials
             );
 

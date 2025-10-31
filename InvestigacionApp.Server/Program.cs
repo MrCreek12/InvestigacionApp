@@ -1,15 +1,31 @@
 using InvestigacionApp.Models;
 using InvestigacionApp.Server.Services;
+using InvestigacionApp.Server;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Microsoft.Extensions.Logging;
+using System.IO;
+using System.Text.Json.Serialization;
+using System.IdentityModel.Tokens.Jwt;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Track server start time to allow invalidation of tokens issued before restart
+builder.Services.AddSingleton(new ServerState { StartedAt = DateTime.UtcNow });
+
+// Configure logging to console and set debug level to capture EF SQL and detailed errors
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.SetMinimumLevel(LogLevel.Debug);
+
 // Configuración de DbContext
 builder.Services.AddDbContext<DbContextPiezas>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("StringLocal")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("StringLocalIvan"))
+           .EnableSensitiveDataLogging()
+           .EnableDetailedErrors()
+);
 
 // Configuración de JWT Service
 builder.Services.AddScoped<JwtService>();
@@ -36,10 +52,42 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
         ClockSkew = TimeSpan.Zero
     };
+
+    // Invalidate tokens issued before server start (forces logout on restart)
+    options.Events = new JwtBearerEvents
+    {
+        OnTokenValidated = context =>
+        {
+            try
+            {
+                var serverState = context.HttpContext.RequestServices.GetRequiredService<ServerState>();
+                var iatClaim = context.Principal?.FindFirst(JwtRegisteredClaimNames.Iat)?.Value;
+                if (!string.IsNullOrEmpty(iatClaim) && long.TryParse(iatClaim, out var iatSeconds))
+                {
+                    var issuedAt = DateTimeOffset.FromUnixTimeSeconds(iatSeconds).UtcDateTime;
+                    if (issuedAt < serverState.StartedAt)
+                    {
+                        context.Fail("Token issued before server restart");
+                    }
+                }
+            }
+            catch
+            {
+                // swallow and allow normal validation to handle failures
+            }
+
+            return Task.CompletedTask;
+        }
+    };
 });
 
 // Configuración de servicios
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddJsonOptions(opts =>
+{
+    // Evita ciclos de referencias y usa JsonIgnoreAttribute/ReferenceHandler si es necesario
+    opts.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+    opts.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+});
 
 builder.Services.AddCors(options =>
 {
@@ -92,6 +140,22 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+// Middleware para registrar el body de POST a /api/pedidos para depuración
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path.StartsWithSegments("/api/pedidos") && context.Request.Method == "POST")
+    {
+        context.Request.EnableBuffering();
+        using var reader = new StreamReader(context.Request.Body, Encoding.UTF8, detectEncodingFromByteOrderMarks: false, leaveOpen: true);
+        var body = await reader.ReadToEndAsync();
+        context.Request.Body.Position = 0;
+        var logger = app.Services.GetRequiredService<ILogger<Program>>();
+        logger.LogDebug("Incoming POST /api/pedidos body: {Body}", body);
+    }
+
+    await next();
+});
 
 app.UseHttpsRedirection();
 app.UseCors("AllowReactApp");

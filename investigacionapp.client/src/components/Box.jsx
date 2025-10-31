@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import * as boxService from '../services/boxService';
+import * as pedidoService from '../services/pedidoService';
 import './Box.css';
 
 const Box = ({ onClose }) => {
@@ -44,18 +45,26 @@ const Box = ({ onClose }) => {
         }
 
         setLoading(true);
-        
-        // Simular envío de solicitud (aquí podrías enviar a una API)
-        setTimeout(() => {
-            alert(`Solicitud enviada exitosamente!\n\nPiezas solicitadas:\n${boxItems.map(item => 
-                `- ${item.pieza.nombre} (${item.cantidadSolicitada})`
-            ).join('\n')}`);
-            
-            // Limpiar el box después de enviar
+
+        const pedido = {
+            usuarioId: 4, // Reemplazar con el ID numérico del usuario autenticado
+            detalles: boxItems.map(item => ({
+                piezaId: item.pieza.id,
+                cantidad: item.cantidadSolicitada
+            }))
+        };
+
+        try {
+            await pedidoService.createPedido(pedido);
+            alert('Pedido enviado exitosamente');
             const updatedItems = boxService.clearBox();
             setBoxItems(updatedItems);
+        } catch (error) {
+            console.error('Error al enviar el pedido:', error);
+            alert('Hubo un error al enviar el pedido');
+        } finally {
             setLoading(false);
-        }, 1500);
+        }
     };
 
     const totalItems = boxItems.reduce((total, item) => total + item.cantidadSolicitada, 0);
@@ -138,4 +147,4 @@ const Box = ({ onClose }) => {
     );
 };
 
-export default Box; 
+export default Box;

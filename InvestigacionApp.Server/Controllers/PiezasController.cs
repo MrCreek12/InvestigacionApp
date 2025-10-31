@@ -40,7 +40,7 @@ namespace InvestigacionApp.Server.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,User")]
         public async Task<ActionResult<Pieza>> PostPieza(Pieza pieza)
         {
             _context.Piezas.Add(pieza);
@@ -49,7 +49,7 @@ namespace InvestigacionApp.Server.Controllers
         }
 
         [HttpPut("{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,User")]
         public async Task<IActionResult> PutPieza(int id, Pieza pieza)
         {
             if (id != pieza.Id)
@@ -79,7 +79,7 @@ namespace InvestigacionApp.Server.Controllers
         }
 
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin, User")]
         public async Task<IActionResult> DeletePieza(int id)
         {
             var pieza = await _context.Piezas.FindAsync(id);

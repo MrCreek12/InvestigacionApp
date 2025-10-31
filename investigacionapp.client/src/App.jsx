@@ -1,10 +1,16 @@
 ﻿// InvestigacionApp.client/src/App.jsx
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import * as piezaService from './services/piezaService';
 import { getUser, logout, isAuthenticated, isAdmin } from './services/authService';
 import Login from './components/Login';
 import Register from './components/Register';
+import Navbar from './components/Navbar';
+import ListadoPiezas from './pages/ListadoPiezas';
+import RegistrarPieza from './pages/RegistrarPieza';
+import PedidosAdmin from './pages/PedidosAdmin';
+import Box from './components/Box';
 import './App.css';
 
 function App() {
@@ -17,6 +23,7 @@ function App() {
     const [posiblesUsos, setPosiblesUsos] = useState('');
     const [error, setError] = useState('');
     const [showRegister, setShowRegister] = useState(false);
+    const [showBox, setShowBox] = useState(false);
 
     // useEffect se ejecuta cuando el componente se carga
     useEffect(() => {
@@ -69,6 +76,7 @@ function App() {
         setUser(null);
         setPiezas([]);
         setShowRegister(false);
+        window.location.reload();
     };
 
     const handleSubmit = async (e) => {
@@ -111,6 +119,9 @@ function App() {
         }
     };
 
+    const handleOpenBox = () => setShowBox(true);
+    const handleCloseBox = () => setShowBox(false);
+
     // Si no está autenticado, mostrar login o register
     if (!user) {
         if (showRegister) {
@@ -130,99 +141,42 @@ function App() {
     }
 
     return (
-        <div className="App">
-            <header className="app-header">
-                <h1>Inventario Inteligente de Piezas Recicladas ♻️</h1>
-                <div className="user-info">
-                    <span>👤 {user.username} ({user.rol})</span>
-                    <button onClick={handleLogout} className="logout-btn">
-                        Cerrar Sesión
-                    </button>
+        <Router>
+            <div className="root">
+                <Navbar onOpenBox={handleOpenBox} onLogout={handleLogout} />
+                <div className="main-content">
+                    <Routes>
+                        <Route path="/" element={
+                            <ListadoPiezas 
+                                piezas={piezas} 
+                                onBorrar={handleBorrar} 
+                                isAdmin={isAdmin()} 
+                                error={error}
+                            />
+                        } />
+                        <Route path="/registrar" element={
+                            <RegistrarPieza 
+                                nombre={nombre}
+                                estado={estado}
+                                cantidad={cantidad}
+                                ubicacion={ubicacion}
+                                posiblesUsos={posiblesUsos}
+                                setNombre={setNombre}
+                                setEstado={setEstado}
+                                setCantidad={setCantidad}
+                                setUbicacion={setUbicacion}
+                                setPosiblesUsos={setPosiblesUsos}
+                                onSubmit={handleSubmit}
+                                isAdmin={isAdmin()}
+                                error={error}
+                            />
+                        } />
+                        <Route path="/pedidos" element={<PedidosAdmin />} />
+                    </Routes>
+                    {showBox && <Box onClose={handleCloseBox} />}
                 </div>
-            </header>
-
-            {error && <div className="error-banner">{error}</div>}
-
-            {/* Solo Admin puede crear piezas */}
-            {isAdmin() && (
-                <form onSubmit={handleSubmit} className="pieza-form">
-                    <h2>Añadir Nueva Pieza</h2>
-                    <input
-                        type="text"
-                        placeholder="Nombre de la pieza"
-                        value={nombre}
-                        onChange={(e) => setNombre(e.target.value)}
-                        required
-                    />
-                    <select value={estado} onChange={(e) => setEstado(e.target.value)}>
-                        <option value="Nuevo">Nuevo</option>
-                        <option value="Usado">Usado</option>
-                        <option value="Reciclado">Reciclado</option>
-                    </select>
-                    <input
-                        type="text"
-                        placeholder="Cantidad (ej. 10kg, 5 unidades)"
-                        value={cantidad}
-                        onChange={(e) => setCantidad(e.target.value)}
-                        required
-                    />
-                    <input
-                        type="text"
-                        placeholder="Ubicación"
-                        value={ubicacion}
-                        onChange={(e) => setUbicacion(e.target.value)}
-                        required
-                    />
-                    <textarea
-                        placeholder="Posibles usos (opcional)"
-                        value={posiblesUsos}
-                        onChange={(e) => setPosiblesUsos(e.target.value)}
-                    ></textarea>
-                    <button type="submit">Guardar</button>
-                </form>
-            )}
-
-            <hr />
-
-            <h2>Listado de Piezas</h2>
-            {piezas.length === 0 ? (
-                <p className="no-data">No hay piezas registradas</p>
-            ) : (
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Nombre</th>
-                            <th>Estado</th>
-                            <th>Cantidad</th>
-                            <th>Ubicación</th>
-                            <th>Posibles Usos</th>
-                            {isAdmin() && <th>Acciones</th>}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {piezas.map(pieza => (
-                            <tr key={pieza.id}>
-                                <td>{pieza.nombre}</td>
-                                <td>{pieza.estado}</td>
-                                <td>{pieza.cantidad}</td>
-                                <td>{pieza.ubicacion}</td>
-                                <td>{pieza.posiblesUsos || '-'}</td>
-                                {isAdmin() && (
-                                    <td>
-                                        <button 
-                                            onClick={() => handleBorrar(pieza.id)}
-                            className="delete-btn"
-                                        >
-                                            Borrar
-                                        </button>
-                                    </td>
-                                )}
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            )}
-        </div>
+            </div>
+        </Router>
     );
 }
 
