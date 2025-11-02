@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { register } from '../services/authService';
-import './Register.css';
 
 const Register = ({ onRegisterSuccess, onBackToLogin }) => {
     const [username, setUsername] = useState('');

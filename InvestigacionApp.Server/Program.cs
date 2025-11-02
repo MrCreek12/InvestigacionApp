@@ -22,7 +22,7 @@ builder.Logging.SetMinimumLevel(LogLevel.Debug);
 
 // Configuración de DbContext
 builder.Services.AddDbContext<DbContextPiezas>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("StringLocalIvan"))
+    options.UseSqlServer(builder.Configuration.GetConnectionString("Cloud"))
            .EnableSensitiveDataLogging()
            .EnableDetailedErrors()
 );

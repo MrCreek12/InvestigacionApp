@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import * as boxService from '../services/boxService';
 import * as pedidoService from '../services/pedidoService';
-import './Box.css';
+//import './Box.css';
 
 const Box = ({ onClose }) => {
     const [boxItems, setBoxItems] = useState([]);
