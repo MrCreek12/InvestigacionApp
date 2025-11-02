@@ -1,4 +1,4 @@
-// investigacionapp.client/src/components/Register.jsx
+ï»¿// investigacionapp.client/src/components/Register.jsx
 
 import { useState } from 'react';
 import { register } from '../services/authService';
@@ -18,12 +18,12 @@ const Register = ({ onRegisterSuccess, onBackToLogin }) => {
 
         // Validaciones
         if (password !== confirmPassword) {
-            setError('Las contraseñas no coinciden');
+            setError('Las contraseÃ±as no coinciden');
             return;
         }
 
         if (password.length < 6) {
-            setError('La contraseña debe tener al menos 6 caracteres');
+            setError('La contraseÃ±a debe tener al menos 6 caracteres');
             return;
         }
 
@@ -72,28 +72,28 @@ const Register = ({ onRegisterSuccess, onBackToLogin }) => {
                     </div>
 
                     <div className="form-group">
-                        <label htmlFor="password">Contraseña</label>
+                        <label htmlFor="password">ContraseÃ±a</label>
                         <input
                             type="password"
                             id="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
-                            placeholder="Ingrese su contraseña"
+                            placeholder="Ingrese su contraseÃ±a"
                             disabled={loading}
                             minLength="6"
                         />
                     </div>
 
                     <div className="form-group">
-                        <label htmlFor="confirmPassword">Confirmar Contraseña</label>
+                        <label htmlFor="confirmPassword">Confirmar ContraseÃ±a</label>
                         <input
                             type="password"
                             id="confirmPassword"
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
                             required
-                            placeholder="Confirme su contraseña"
+                            placeholder="Confirme su contraseÃ±a"
                             disabled={loading}
                         />
                     </div>
@@ -118,14 +118,14 @@ const Register = ({ onRegisterSuccess, onBackToLogin }) => {
                     </button>
 
                     <div className="auth-switch">
-                        <p>¿Ya tienes una cuenta?</p>
+                        <p>Â¿Ya tienes una cuenta?</p>
                         <button 
                             type="button" 
                             className="link-btn" 
                             onClick={onBackToLogin}
                             disabled={loading}
                         >
-                            Iniciar Sesión
+                            Iniciar SesiÃ³n
                         </button>
                     </div>
                 </form>

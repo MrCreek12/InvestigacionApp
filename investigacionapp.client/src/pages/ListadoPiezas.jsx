@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import * as piezaService from '../services/piezaService';
 import * as boxService from '../services/boxService';
 import { isAdmin } from '../services/authService';
@@ -22,8 +22,9 @@ const ListadoPiezas = () => {
         }
     };
 
+    // La función de borrar se mantiene, aunque el botón ya no está en la card.
     const handleBorrar = async (id) => {
-        if (!window.confirm('�Est� seguro de eliminar esta pieza?')) {
+        if (!window.confirm('¿Está seguro de eliminar esta pieza?')) {
             return;
         }
 
@@ -39,55 +40,49 @@ const ListadoPiezas = () => {
 
     const handleAgregarAlBox = (pieza) => {
         boxService.addToBox(pieza);
-        alert(`Pieza agregada al box: ${pieza.nombre}`);
+        alert(`Pieza "${pieza.nombre}" agregada al box.`);
     };
 
     return (
-        <div>
-            <h2>Listado de Piezas</h2>
+        <div className="content-area">
+            {/* Mensaje de bienvenida y título de la sección actualizados */}
+            <h1>¡Hola Melbert!, ¿Listo para Reciclar?</h1>
+            <h2 className="section-title">Piezas</h2>
+
             {error && <div className="error-banner">{error}</div>}
             {piezas.length === 0 ? (
                 <p className="no-data">No hay piezas registradas</p>
             ) : (
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Nombre</th>
-                            <th>Estado</th>
-                            <th>Cantidad</th>
-                            <th>Ubicaci�n</th>
-                            <th>Posibles Usos</th>
-                            {isAdmin() && <th>Acciones</th>}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {piezas.map(pieza => (
-                            <tr key={pieza.id}>
-                                <td>{pieza.nombre}</td>
-                                <td>{pieza.estado}</td>
-                                <td>{pieza.cantidad}</td>
-                                <td>{pieza.ubicacion}</td>
-                                <td>{pieza.posiblesUsos || '-'}</td>
-                                <td>
-                                    <button 
-                                        onClick={() => handleAgregarAlBox(pieza)}
-                                        className="add-to-box-btn"
-                                    >
-                                        Agregar al Box
-                                    </button>
-                                    {isAdmin() && (
-                                        <button 
-                                            onClick={() => handleBorrar(pieza.id)}
-                                            className="delete-btn"
-                                        >
-                                            Borrar
-                                        </button>
-                                    )}
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+                <div className="piezas-grid">
+                    {piezas.map(pieza => (
+                        <div key={pieza.id} className="pieza-card">
+                            {/* Placeholder de la imagen con botón y overlay de cantidad */}
+                            <div className="card-image-placeholder">
+                                <div className="cantidad-overlay">
+                                    <p>Cantidad:</p>
+                                    <p>{pieza.cantidad}</p>
+                                </div>
+                                <button
+                                    onClick={() => handleAgregarAlBox(pieza)}
+                                    className="add-to-box-btn"
+                                    title="Agregar al Box"
+                                >
+                                    +
+                                </button>
+                            </div>
+
+                            {/* Información de la card */}
+                            <div className="card-info">
+                                <div className="card-title-line">
+                                    <h3 className="card-title">{pieza.nombre}</h3>
+                                    <span className={`card-status estado-${pieza.estado?.toLowerCase()}`}>{pieza.estado}</span>
+                                </div>
+                                <p className="card-description"> {pieza.posiblesUsos || 'No especificada'}</p>
+                                <p className="card-location">{pieza.ubicacion}</p>
+                            </div>
+                        </div>
+                    ))}
+                </div>
             )}
         </div>
     );

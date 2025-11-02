@@ -25,13 +25,13 @@ const PedidosAdmin = () => {
     };
 
     return (
-        <div>
+        <div className="pedidos-container">
             <h2>Pedidos Realizados</h2>
             {error && <div className="error-banner">{error}</div>}
             {pedidos.length === 0 ? (
                 <p className="no-data">No hay pedidos registrados</p>
             ) : (
-                <table className="table">
+                    <table className="pedidos-table">
                     <thead>
                         <tr>
                             <th>ID Pedido</th>

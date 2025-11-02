@@ -11,7 +11,6 @@ import ListadoPiezas from './pages/ListadoPiezas';
 import RegistrarPieza from './pages/RegistrarPieza';
 import PedidosAdmin from './pages/PedidosAdmin';
 import Box from './components/Box';
-import './App.css';
 
 function App() {
     const [user, setUser] = useState(null);
@@ -43,7 +42,7 @@ function App() {
         } catch (error) {
             console.error("Error al cargar piezas:", error);
             setError(error.message);
-            
+
             // Si el error es de autenticación, cerrar sesión
             if (error.message.includes('autorizado')) {
                 handleLogout();
@@ -126,15 +125,15 @@ function App() {
     if (!user) {
         if (showRegister) {
             return (
-                <Register 
+                <Register
                     onRegisterSuccess={handleRegisterSuccess}
                     onBackToLogin={handleBackToLogin}
                 />
             );
         }
         return (
-            <Login 
-                onLoginSuccess={handleLoginSuccess} 
+            <Login
+                onLoginSuccess={handleLoginSuccess}
                 onShowRegister={handleShowRegister}
             />
         );
@@ -147,15 +146,15 @@ function App() {
                 <div className="main-content">
                     <Routes>
                         <Route path="/" element={
-                            <ListadoPiezas 
-                                piezas={piezas} 
-                                onBorrar={handleBorrar} 
-                                isAdmin={isAdmin()} 
+                            <ListadoPiezas
+                                piezas={piezas}
+                                onBorrar={handleBorrar}
+                                isAdmin={isAdmin()}
                                 error={error}
                             />
                         } />
                         <Route path="/registrar" element={
-                            <RegistrarPieza 
+                            <RegistrarPieza
                                 nombre={nombre}
                                 estado={estado}
                                 cantidad={cantidad}
@@ -173,8 +172,9 @@ function App() {
                         } />
                         <Route path="/pedidos" element={<PedidosAdmin />} />
                     </Routes>
-                    {showBox && <Box onClose={handleCloseBox} />}
                 </div>
+                {/* 🔥 MOVIDO FUERA de main-content - Ahora está al nivel del root */}
+                {showBox && <Box onClose={handleCloseBox} />}
             </div>
         </Router>
     );
